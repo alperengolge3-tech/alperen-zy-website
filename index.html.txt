@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zihinsel Yetersizliği Anlama Rehberi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Harmony (Background: gray-50, Accent: amber-700) -->
+    <!-- Application Structure Plan: Tematik bir gezinme yapısı (Ana Sayfa, Tanı, Nedenler, Özellikler, Tarama, Tarihçe) kullanıldı. Bu yapı, kullanıcıların raporların lineer akışına bağlı kalmadan ilgilendikleri konuya doğrudan atlamalarına olanak tanır. Etkileşimler (Tab'lar, Chart) bilgiyi sindirilebilir bölümlere ayırır. Amaç, akademik bilgiyi keşfedilebilir bir eğitim kaynağına dönüştürmektir. -->
+    <!-- Visualization & Content Choices: [Prevalans -> Goal: Inform -> Viz: Doughnut Chart (Chart.js) -> Interaction: Hover -> Justification: ZY popülasyonunun çoğunluğunun 'hafif' olduğunu anında gösterir.] | [Sınıflama/Nedenler/Özellikler/Tarihçe -> Goal: Organize/Compare -> Viz: Sekmeli İçerik (HTML/JS) -> Interaction: Click tabs -> Justification: Yoğun metin ve alt kategorileri (örn. Prenatal/Perinatal) yönetilebilir, odaklanmış bölümlere ayırır.] | [Tanı Kriterleri -> Goal: Inform -> Viz: HTML List -> Justification: 3 ana tanı kriterini net bir şekilde sunar.] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .nav-active {
+            background-color: #fef3c7; 
+            color: #b45309; 
+            font-weight: 600;
+        }
+        .tab-active {
+            border-bottom-color: #b45309;
+            color: #b45309;
+            font-weight: 600;
+        }
+        /* Sidebar ve mobil menu stilleri */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 1023px) {
+            #sidebar {
+                transform: translateX(-100%);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Kenar Çubuğu (Sidebar) / Mobil Menu -->
+    <div id="sidebar" class="fixed top-0 left-0 z-30 w-64 h-full bg-white shadow-lg lg:translate-x-0 border-r border-gray-200">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-amber-700">ZY Rehberi</h2>
+            <p class="text-sm text-gray-600 mt-1">İnteraktif Bilgi Kaynağı</p>
+        </div>
+        <nav class="mt-4">
+            <ul>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100 nav-active" data-section="home">Ana Sayfa</a></li>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100" data-section="tanim">Tanı ve Sınıflama</a></li>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100" data-section="nedenler">Nedenleri (Etiyoloji)</a></li>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100" data-section="ozellikler">Bireysel Özellikler</a></li>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100" data-section="tarama">Tarama ve Değerlendirme</a></li>
+                <li><a href="#" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100" data-section="tarihce">Tarihçe</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Mobil Menu Tetikleyici (Hamburger İkonu) -->
+    <button id="menu-toggle" class="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white rounded-md shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+    </button>
+
+    <!-- Ana İçerik Alanı -->
+    <div id="main-content" class="lg:pl-64 transition-all duration-300">
+        <div class="p-6 md:p-10 max-w-7xl mx-auto">
+
+            <!-- BÖLÜM: Ana Sayfa -->
+            <section id="home-section" class="content-section active">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Zihinsel Yetersizliği Anlamak</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Bu interaktif rehber, zihinsel yetersizliğin (ZY) ne olduğunu, nedenlerini, bireysel özelliklerini ve tarihsel bağlamını anlamak için tasarlanmıştır. Raporlardan derlenen bilgileri keşfetmek için lütfen kenar çubuğundaki menüyü kullanın.
+                </p>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h2 class="text-2xl font-semibold text-amber-700 mb-4">Zihinsel Yetersizlik Sınıflamasının Yaygınlığı</h2>
+                    <p class="text-gray-600 mb-4">
+                        Zihinsel yetersizliği olan bireyler homojen bir grup değildir. Eğitsel sınıflamaya göre, bu bireylerin çok büyük bir çoğunluğu 'hafif' düzeyde yetersizliğe sahiptir. Bu grafik, zihin yetersizliği olan bireylerin kendi içindeki dağılımını göstermektedir (Kaynak: ZY Tanım-Sınıflama-Yaygınlık Raporu).
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="prevalenceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BÖLÜM: Tanı ve Sınıflama -->
+            <section id="tanim-section" class="content-section">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Tanı ve Sınıflama</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Zihinsel yetersizliğin modern tanımı, sadece zeka puanına değil, bireyin günlük yaşamdaki işlevselliğine odaklanır. Amerikan Zihinsel ve Gelişimsel Yetersizlikler Birliği (AAIDD) ve Türkiye'deki MEB yönetmelikleri bu yaklaşımı temel alır.
+                </p>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+                    <h2 class="text-2xl font-semibold text-amber-700 mb-4">Zihinsel Yetersizlik Tanı Kriterleri (AAIDD & MEB)</h2>
+                    <p class="text-gray-600 mb-4">
+                        Bir bireye zihinsel yetersizlik tanısı konulabilmesi için aşağıdaki üç temel koşulun **tümünün** karşılanması gerekir:
+                    </p>
+                    <ul class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>**Zihinsel İşlevlerde Sınırlılık:** Standartize zeka testlerinde (örn: WISC-R, Stanford-Binet) Zeka Bölümü (ZB) puanının yaklaşık **70 ve altı** olması (Ortalamanın iki standart sapma altı).</li>
+                        <li>**Uyumsal Davranışlarda Sınırlılık:** Bireyin kendi yaş grubu ve kültüründen beklenen bağımsız yaşam standartlarını karşılayamaması. Bu, üç alanda değerlendirilir.</li>
+                        <li>**Gelişimsel Dönem:** Bu sınırlılıkların **18 yaşından önce** ortaya çıkmış olması.</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+                    <h2 class="text-2xl font-semibold text-amber-700 mb-4">Uyumsal Davranış Kategorileri</h2>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-6" data-tab-group="uyumsal-tabs">
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600 tab-active" data-tab-toggle="kavramsal">Kavramsal Beceriler</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="sosyal">Sosyal Beceriler</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="pratik">Pratik Beceriler</button>
+                        </nav>
+                    </div>
+                    <div id="kavramsal-content" class="tab-content" data-tab-content="kavramsal">
+                        <h3 class="font-semibold text-lg mb-2">Kavramsal Beceriler</h3>
+                        <p class="text-gray-600">Dil (alıcı ve ifade edici), okuma-yazma, para, zaman ve sayı kavramları ile öz-yönetim (kendi kendini yönetme) becerilerini içerir.</p>
+                    </div>
+                    <div id="sosyal-content" class="tab-content hidden" data-tab-content="sosyal">
+                        <h3 class="font-semibold text-lg mb-2">Sosyal Beceriler</h3>
+                        <p class="text-gray-600">Kişiler arası ilişkiler, sorumluluk, öz-saygı, kurallara uyma, yasalara uyma, aldatılabilirlikten/safdillikten kaçınma ve sosyal problem çözme becerilerini içerir.</p>
+                    </div>
+                    <div id="pratik-content" class="tab-content hidden" data-tab-content="pratik">
+                        <h3 class="font-semibold text-lg mb-2">Pratik Beceriler</h3>
+                        <p class="text-gray-600">Günlük yaşam etkinliklerini (öz bakım, giyinme, yeme), araçlı yaşam etkinliklerini (yemek hazırlama, ev bakımı, ulaşım, telefon kullanma, para yönetimi) ve iş becerilerini içerir.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h2 class="text-2xl font-semibold text-amber-700 mb-4">Eğitsel Sınıflama (Türkiye MEB)</h2>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-6" data-tab-group="siniflama-tabs">
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600 tab-active" data-tab-toggle="hafif">Hafif Düzey</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="orta">Orta Düzey</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="agir">Ağır / Çok Ağır Düzey</button>
+                        </nav>
+                    </div>
+                    <div id="hafif-content" class="tab-content" data-tab-content="hafif">
+                        <h3 class="font-semibold text-lg mb-2">Hafif Düzeyde ZY (Eğitilebilir)</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">ZB Aralığı:</strong> 50-75 (yaklaşık)<br><strong class="text-gray-900">Temel Özellikler:</strong> ZY olan bireylerin en kalabalık grubudur (%89). Temel akademik becerileri (okuma, yazma, matematik) öğrenebilirler, ancak genellikle 3. veya 4. sınıf düzeyine kadar ilerleyebilirler.</p>
+                    </div>
+                    <div id="orta-content" class="tab-content hidden" data-tab-content="orta">
+                        <h3 class="font-semibold text-lg mb-2">Orta Düzeyde ZY (Öğretilebilir)</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">ZB Aralığı:</strong> 25-55 (yaklaşık)<br><strong class="text-gray-900">Temel Özellikler:</strong> Temel akademik becerilerde güçlük çekerler. Eğitimleri daha çok günlük yaşamın gerektirdiği sosyal uyum, iletişim ve öz bakım becerilerine odaklanır.</p>
+                    </div>
+                    <div id="agir-content" class="tab-content hidden" data-tab-content="agir">
+                        <h3 class="font-semibold text-lg mb-2">Ağır / Çok Ağır Düzeyde ZY</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">ZB Aralığı:</strong> 35 ve altı (yaklaşık)<br><strong class="text-gray-900">Temel Özellikler:</strong> Yaşam boyu yoğun desteğe ve bakıma gereksinim duyarlar. Eğitim programları temel öz bakım, dil ve hareket becerilerine odaklanır.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BÖLÜM: Nedenleri (Etiyoloji) -->
+            <section id="nedenler-section" class="content-section">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Nedenleri (Etiyoloji)</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Zihinsel yetersizliğin nedenleri çok çeşitlidir ve genellikle risk faktörlerinin ortaya çıktığı döneme göre sınıflandırılır: Doğum Öncesi (Prenatal), Doğum Esnası (Perinatal) ve Doğum Sonrası (Postnatal).
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex flex-wrap space-x-6" data-tab-group="nedenler-tabs">
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600 tab-active" data-tab-toggle="prenatal">Doğum Öncesi</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="perinatal">Doğum Esnası</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="postnatal">Doğum Sonrası</button>
+                        </nav>
+                    </div>
+
+                    <!-- Doğum Öncesi Nedenler -->
+                    <div id="prenatal-content" class="tab-content space-y-4" data-tab-content="prenatal">
+                        <h3 class="font-semibold text-lg mb-2">Doğum Öncesi (Prenatal) Nedenler</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg border">
+                                <h4 class="font-semibold text-amber-700">1. Genetik ve Kromozomal Anomaliler</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                                    <li><strong>Down Sendromu:</strong> En sık görülen kromozomal nedendir (Genellikle Trisomi 21).</li>
+                                    <li><strong>Frajil-X Sendromu:</strong> Erkek çocuklarda daha sık görülen, X kromozomundaki bir hatadan kaynaklanır.</li>
+                                    <li><strong>Williams Sendromu:</strong> 7. kromozomdaki bir hatadan kaynaklanır, kalp ve damar sorunları eşlik edebilir.</li>
+                                    <li><strong>Prader-Willi Sendromu:</strong> 15. kromozomdaki bir hatadan kaynaklanır, doymak bilmeyen yeme isteği tipiktir.</li>
+                                    <li><strong>Fenilketonüri (PKU):</strong> Genetik kökenli metabolik bir bozukluktur. Erken teşhis ve **özel diyetle** zihinsel yetersizlik önlenebilir.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg border">
+                                <h4 class="font-semibold text-amber-700">2. Anneye ve Çevreye İlişkin Etmenler</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                                    <li><strong>Enfeksiyonlar:</strong> Annenin gebelikte geçirdiği **Kızamıkçık (Rubella)**, Toksoplazma ve HIV gibi hastalıklar.</li>
+                                    <li><strong>Madde Kullanımı:</strong> Annenin alkol, uyuşturucu veya bazı ilaçları kullanması.</li>
+                                    <li><strong>Anne Yaşı:</strong> 20 yaş altı veya 35 yaş üstü gebelikler riski artırır.</li>
+                                    <li><strong>Rh Uyuşmazlığı:</strong> Annenin Rh(-), bebeğin Rh(+) olması (özellikle ikinci ve sonraki doğumlarda).</li>
+                                    <li><strong>Radyasyon:</strong> 0.5 Gray üzerindeki yüksek doza maruz kalma.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg border md:col-span-2">
+                                <h4 class="font-semibold text-amber-700">3. Kafa İçi ve Kafatası Bozuklukları</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                                    <li><strong>Hidrosefali:</strong> Beyin-Omurilik Sıvısının (BOS) beyinde birikerek basınca yol açması.</li>
+                                    <li><strong>Mikrosefali:</strong> Baş çevresinin normlara göre iki standart sapma altında olması (küçük kafa).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Doğum Esnası Nedenler -->
+                    <div id="perinatal-content" class="tab-content hidden space-y-4" data-tab-content="perinatal">
+                        <h3 class="font-semibold text-lg mb-2">Doğum Esnası (Perinatal) Nedenler</h3>
+                        <p class="text-gray-600">Doğum eylemi sırasında meydana gelen komplikasyonları içerir:</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>Doğum Zamanı:</strong> **Erken doğum** (< 37 hafta) ve düşük doğum ağırlığı (< 2500 gr) ciddi bir risk faktörüdür. Geç doğumlar da risklidir.</li>
+                            <li><strong>Güç Doğum ve Oksijensizlik (Hipoksi):</strong> Bebeğin doğum kanalında uzun süre kalması, göbek kordonunun dolanması veya iri olması nedeniyle beynin oksijensiz kalması (Hipoksi).</li>
+                            <li><strong>Ekipman Kullanımı:</strong> Vakum veya forseps gibi ekipmanların yanlış kullanımı beyin kanamalarına yol açabilir.</li>
+                            <li><strong>Enfeksiyonlar:</strong> Doğum ortamında bebeğin menenjit gibi enfeksiyonlara maruz kalması.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Doğum Sonrası Nedenler -->
+                    <div id="postnatal-content" class="tab-content hidden space-y-4" data-tab-content="postnatal">
+                        <h3 class="font-semibold text-lg mb-2">Doğum Sonrası (Postnatal) Nedenler</h3>
+                        <p class="text-gray-600">Doğumdan 18 yaşına kadar olan süreçte meydana gelen durumları içerir:</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>Hastalıklar ve Enfeksiyonlar:</strong> **Menenjit**, ansefalit (beyin iltihabı), kızamık gibi yüksek ateşli hastalıklar.</li>
+                            <li><strong>Zehirlenmeler:</strong> Özellikle **Kurşun zehirlenmesi** (2. yaş döneminde çok tehlikelidir), kimyasal maddeler veya ilaçlar.</li>
+                            <li><strong>Kazalar:</strong> Düşme, trafik kazaları gibi baş travmaları (beyin hasarı).</li>
+                            <li>**Çevresel ve Sosyal Etmenler:** Yetersiz beslenme, çevresel uyaran eksikliği ve çocuk istismarı/ihmali.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BÖLÜM: Bireysel Özellikler -->
+            <section id="ozellikler-section" class="content-section">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Bireysel Özellikler</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Zihinsel yetersizliği olan bireylerin özellikleri, yetersizliğin derecesine ve aldıkları desteğe göre büyük farklılıklar gösterir. Ancak, bazı yaygın öğrenme, dil ve psikososyal özellikler bulunmaktadır.
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex flex-wrap space-x-6" data-tab-group="ozellikler-tabs">
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600 tab-active" data-tab-toggle="ogrenme">Öğrenme Özellikleri</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="dil">Dil ve Konuşma</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="psikolojik">Psikolojik Özellikler</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="davranissal">Davranışsal Özellikler</button>
+                        </nav>
+                    </div>
+
+                    <div id="ogrenme-content" class="tab-content space-y-3" data-tab-content="ogrenme">
+                        <h3 class="font-semibold text-lg mb-2">Öğrenme Özellikleri</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">Öğrenme Hızı:</strong> Yetersizliği olmayan akranlarına göre daha yavaştır. Öğrenme için daha fazla tekrar ve yanıt verme fırsatına ihtiyaç duyarlar.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Bellek (Hafıza):</strong> Özellikle bilgiyi kısa süre tutma (**kısa süreli bellek**) ve bilgiyi işlerken akılda tutma (**çalışma belleği**) alanlarında belirgin güçlükler yaşarlar.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Üstbiliş (Metacognition):</strong> Plan yapma, bir görevi tamamlamak için strateji seçme, uygulama ve sonuçları değerlendirme gibi "öğrenmeyi öğrenme" becerilerinde zayıflık gösterirler.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Dikkat:</strong> İlgili uyarana odaklanmakta ve ilgisiz uyaranları filtrelemekte zorlanabilirler.</p>
+                    </div>
+
+                    <div id="dil-content" class="tab-content hidden space-y-3" data-tab-content="dil">
+                        <h3 class="font-semibold text-lg mb-2">Dil ve Konuşma Özellikleri</h3>
+                        <p class="text-gray-600">Dil gelişimleri genellikle zihinsel becerileriyle paralellik gösterir ancak gecikmiştir. Dilin tüm bileşenlerinde (sesbilgisi, sözdizimi, anlambilim) zorluk yaşayabilirler.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">En Belirgin Zorluk Alanı:</strong> Dilin sosyal bağlamda kullanımı, yani **Kullanımbilim (Pragmatik)** becerilerdir. Sohbet başlatma, sürdürme, konuya uygun konuşma ve sosyal ipuçlarını anlama konularında belirgin güçlükler yaşarlar.</p>
+                    </div>
+
+                    <div id="psikolojik-content" class="tab-content hidden space-y-3" data-tab-content="psikolojik">
+                        <h3 class="font-semibold text-lg mb-2">Psikolojik Özellikler</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">Benlik Kavramı:</strong> Sık başarısızlık yaşantıları ve etiketlenme nedeniyle olumsuz benlik kavramı geliştirme riski altındadırlar.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Denetim Odağı (Locus of Control):</strong> Olayların sonuçlarını kendi çabalarından çok, dış etkenlere (şans, kader, başkaları) bağlama eğilimindedirler (**Dışsal Denetim Odağı**).</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Güdülenme (Motivasyon):</strong> Geçmişteki başarısızlıklar nedeniyle yeni şeyler denemek için düşük motivasyona sahip olabilirler.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Öğrenilmiş Çaresizlik:</strong> Tekrarlanan başarısızlıklar sonucu, "Ne yaparsam yapayım başaramayacağım" düşüncesi geliştirerek çabalamaktan vazgeçme durumu sık görülür.</p>
+                    </div>
+
+                    <div id="davranissal-content" class="tab-content hidden space-y-3" data-tab-content="davranissal">
+                        <h3 class="font-semibold text-lg mb-2">Davranışsal Özellikler</h3>
+                        <p class="text-gray-600"><strong class="text-gray-900">Uyumsal Davranışlar:</strong> Tanımın bir parçası olarak, kavramsal, sosyal ve pratik uyumsal becerilerde eksiklikler gösterirler.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Basmakalıp Davranışlar (Stereotipiler):</strong> Özellikle yetersizliğin derecesi arttıkça, sosyal bir işlevi olmayan, yinelenen ve tekrarlayıcı davranışlar (örn: el çırpma, sallanma, anlamsız ses çıkarma) görülebilir.</p>
+                        <p class="text-gray-600"><strong class="text-gray-900">Kendine Zarar Verme:</strong> Bazı durumlarda (özellikle bazı sendromlarda, örn: Lesch-Nyhan) kendine zarar verici davranışlar gözlenebilir.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BÖLÜM: Tarama ve Değerlendirme -->
+            <section id="tarama-section" class="content-section">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Tarama ve Değerlendirme</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Zihinsel yetersizliğin belirlenmesi, sistematik bir değerlendirme sürecinin parçasıdır. Bu süreç, risk altındaki bireyleri belirleyen 'tarama' ile başlar ve kesin teşhise götüren 'tanılama' ile devam eder.
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <h2 class="text-2xl font-semibold text-amber-700 mb-4">Tarama vs. Tanılama</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-semibold text-lg">Tarama (Screening)</h3>
+                                <p class="text-gray-600">Değerlendirme sürecinin **ilk basamağıdır**. Amacı, zihinsel yetersizlik açısından **risk altında olan** bireyleri erken dönemde belirlemek ve izlemektir. **Kesin tanı koymaz.** (Örn: Denver II, AGTE, GEÇDA).</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Tanılama (Diagnosis)</h3>
+                                <p class="text-gray-600">Kapsamlı bir değerlendirmedir. Amacı, bireyin özel eğitim hizmetleri için **uygun olup olmadığını belirlemek** ve kesin tanı koymaktır. (Zeka Testleri + Uyumsal Davranış Ölçekleri kullanılır).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <h2 class="text-2xl font-semibold text-amber-700 mb-4">Doğum Öncesi Testler</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <h3 class="font-semibold text-lg">İnvaziv Olmayan Testler (Tarama)</h3>
+                                <p class="text-gray-600">Risk belirlemek için kullanılır. Kesin tanı koymaz. Örnekler: Fetal ultrasonografi, anne kanından yapılan ikili, üçlü ve dörtlü tarama testleri.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">İnvaziv Testler (Tanı)</h3>
+                                <p class="text-gray-600">Fetüse doğrudan müdahale içerir ve **kesin tanı koymak** mümkün olabilir. Örnekler: **Amniyosentez** (amniyon sıvısı alma), **Koryon Villus Doku Örneklemesi**.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6">
+                    <h2 class="text-2xl font-semibold text-amber-700 mb-4">Türkiye'deki Ulusal Tarama Çalışmaları</h2>
+                    <p class="text-gray-600">
+                        Ülkemizde, diğer yetersizlikler için olmasa da, **yalnızca iki durum** için ulusal çapta sistematik tarama çalışmaları mevcuttur:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 mt-4 space-y-2">
+                        <li><strong>Fenilketonüri (PKU):</strong> Doğumdan kısa süre sonra topuktan alınan kan örneği ile taranır.</li>
+                        <li><strong>İşitme Yetersizliği:</strong> Yenidoğan işitme taraması ile taranır.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- BÖLÜM: Tarihçe -->
+            <section id="tarihce-section" class="content-section">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Tarihçe</h1>
+                <p class="text-lg text-gray-700 mb-8">
+                    Zihinsel yetersizliğe olan bakış açısı, tarih boyunca dramatik bir şekilde değişmiştir. Toplumsal dışlanmadan, ilahi ceza olarak görülmeye; sığınma evlerinden, modern eğitim haklarına kadar uzun bir yol kat edilmiştir.
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-6" data-tab-group="tarihce-tabs">
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600 tab-active" data-tab-toggle="dunya">Dünya Tarihçesi</button>
+                            <button class="tab-toggle py-2 px-1 border-b-2 border-transparent text-gray-600 hover:text-amber-600" data-tab-toggle="turkiye">Türkiye Tarihçesi</button>
+                        </nav>
+                    </div>
+
+                    <div id="dunya-content" class="tab-content space-y-4" data-tab-content="dunya">
+                        <h3 class="font-semibold text-lg mb-2">Dünya Tarihçesi (Önemli Dönüm Noktaları)</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>Antik Çağ (Yunan/Roma):</strong> Engelli bireylere yönelik algı dışlayıcıydı. Aristoteles ve Platon, toplumsal görevi yerine getiremeyeceklerin yok edilmesi gerektiğini savunmuştur.</li>
+                            <li><strong>Orta Çağ:</strong> Engellilik, şeytani bir durum veya ilahi bir ceza olarak algılandı.</li>
+                            <li><strong>19. Yüzyıl (Eğitimin Başlangıcı):</strong>
+                                <ul>
+                                    <li><strong>Jean Marc Gaspard Itard:</strong> Aveyron ormanlarında bulunan 'vahşi çocuk' Victor ile yaptığı çalışmalarla özel eğitimin öncüsü oldu.</li>
+                                    <li><strong>Edoard Seguin:</strong> Itard'ın öğrencisi; 'Fizyolojik Yöntem' ile duyu eğitimine odaklanarak modern eğitim yöntemlerinin temelini attı.</li>
+                                </ul>
+                            </li>
+                            <li><strong>20. Yüzyıl (Bilimsel Dönem):</strong>
+                                <ul>
+                                    <li><strong>Binet ve Simon (1905):</strong> İlk zeka ölçeğini geliştirerek 'hafif düzeyde' yetersizliğin tanımlanmasını sağladılar.</li>
+                                    <li><strong>AAIDD (1959 Tanımı):</strong> Zihin yetersizliği tanımına ilk kez **"uyumsal davranışlara"** vurgu yaptı.</li>
+                                    <li><strong>PL 94-142 (1975, ABD):</strong> "Tüm Engelli Çocuklar İçin Eğitim Yasası" ile uygun ve ücretsiz eğitimi garanti altına aldı ve **kaynaştırma** uygulamalarını başlattı.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="turkiye-content" class="tab-content hidden space-y-4" data-tab-content="turkiye">
+                        <h3 class="font-semibold text-lg mb-2">Türkiye Tarihçesi (Önemli Dönüm Noktaları)</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>Osmanlı Dönemi:</strong> Özel eğitimdeki ilk sistemli çaba, **Enderun Mektebi** ile üstün yetenekli bireylere yönelikti. (1889'da işitme ve görme engelliler için sınıflar açıldı).</li>
+                            <li><strong>1950'ler (Cumhuriyet Dönemi Dönüşümü):</strong>
+                                <ul>
+                                    <li>Özel eğitim hizmetleri Sağlık Bakanlığı'ndan **Milli Eğitim Bakanlığı'na** devredildi. Bu, konunun bir **eğitim konusu** olarak ele alındığını gösteren kritik bir adımdı.</li>
+                                    <li><strong>1952 (Gazi Eğitim Enstitüsü):</strong> Özel Eğitim Şubesi kurularak personel yetiştirmede **ilk sistemli çaba** başladı.</li>
+                                    <li><strong>1955 (Psikolojik Servis Merkezi):** Günümüzdeki Rehberlik ve Araştırma Merkezleri'nin (RAM) temelini attı.</li>
+                                </ul>
+                            </li>
+                            <li><strong>1965 (Ankara Üniversitesi):** Özel Eğitim Bölümü kurularak üniversite düzeyindeki **ikinci önemli başlangıç** yapıldı.</li>
+                            <li><strong>1997 (573 Sayılı KHK):** Özel eğitim gerektiren bireylerin eğitim haklarını düzenleyen ilk kapsamlı yasal düzenlemelerden biri oldu.</li>
+                            <li><strong>2006 (Özel Eğitim Hizmetleri Yönetmeliği):** Bireyselleştirilmiş Eğitim Programı (BEP) gibi modern uygulamaları ve güncel tanı kriterlerini yasal çerçeveye oturttu.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ### Grafik Oluşturma (Chart.js) ###
+            function initPrevalenceChart() {
+                const ctx = document.getElementById('prevalenceChart');
+                if (!ctx) return;
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            'Hafif Düzey (Eğitilebilir)', 
+                            'Orta Düzey (Öğretilebilir)', 
+                            'Ağır Düzey', 
+                            'Çok Ağır Düzey (Bağımlı)'
+                        ],
+                        datasets: [{
+                            label: 'ZY Sınıflama Yaygınlığı',
+                            data: [89, 6, 3.5, 1.5],
+                            backgroundColor: [
+                                '#fbbf24', // amber-400
+                                '#fcd34d', // amber-300
+                                '#fde68a', // amber-200
+                                '#fef3c7'  // amber-100
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: {
+                                        size: 12,
+                                        family: 'Inter, sans-serif'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed + '%';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ### Sekme (Tab) Yönetimi ###
+            function initTabs() {
+                const tabGroups = document.querySelectorAll('[data-tab-group]');
+                
+                tabGroups.forEach(group => {
+                    const toggles = group.querySelectorAll('[data-tab-toggle]');
+                    const contents = group.closest('.rounded-lg').querySelectorAll('[data-tab-content]');
+
+                    toggles.forEach(toggle => {
+                        toggle.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const tabId = toggle.getAttribute('data-tab-toggle');
+
+                            toggles.forEach(t => t.classList.remove('tab-active'));
+                            toggle.classList.add('tab-active');
+
+                            contents.forEach(content => {
+                                if (content.getAttribute('data-tab-content') === tabId) {
+                                    content.classList.remove('hidden');
+                                } else {
+                                    content.classList.add('hidden');
+                                }
+                            });
+                        });
+                    });
+                });
+            }
+
+            // ### Gezinme (Navigation) Yönetimi ###
+            function initNavigation() {
+                const navLinks = document.querySelectorAll('.nav-link');
+                const contentSections = document.querySelectorAll('.content-section');
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.getElementById('main-content');
+                const menuToggle = document.getElementById('menu-toggle');
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const sectionId = link.getAttribute('data-section');
+
+                        contentSections.forEach(section => {
+                            if (section.id === sectionId + '-section') {
+                                section.classList.add('active');
+                            } else {
+                                section.classList.remove('active');
+                            }
+                        });
+
+                        navLinks.forEach(nav => nav.classList.remove('nav-active'));
+                        link.classList.add('nav-active');
+
+                        window.scrollTo(0, 0);
+
+                        if (window.innerWidth < 1024) {
+                            sidebar.classList.remove('open');
+                        }
+                    });
+                });
+
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth < 1024 && sidebar.classList.contains('open')) {
+                        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                            sidebar.classList.remove('open');
+                        }
+                    }
+                });
+            }
+
+            // Başlatma
+            initPrevalenceChart();
+            initTabs();
+            initNavigation();
+        });
+    </script>
+</body>
+</html>
